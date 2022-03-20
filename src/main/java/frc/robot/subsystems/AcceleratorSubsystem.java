@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -15,6 +16,9 @@ public class AcceleratorSubsystem extends SubsystemBase {
 
   public AcceleratorSubsystem() {
     configureMotor();
+    if(Constants.Telemetry.Accelerator){
+      Shuffleboard.getTab("Accelerator").add("Accelerator Speed", mMotor.get());
+    }
   }
 
   public void configureMotor(){

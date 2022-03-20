@@ -6,6 +6,8 @@ import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -13,14 +15,22 @@ public class IntakeSubsystem extends SubsystemBase {
   
   private static WPI_TalonSRX mMotor = new WPI_TalonSRX(Constants.CAN.kIntake);
 
+  private Timer mTimer = new Timer();
+
   public IntakeSubsystem() {
     configureMotor();
+
+    if(Constants.Telemetry.Intake){
+      Shuffleboard.getTab("Intake").add("Intake Running", mMotor.get() != 0);
+      Shuffleboard.getTab("Intake").add("Intake Amps", mMotor.getSupplyCurrent());
+    }
+
   }
 
   public void configureMotor(){
     mMotor.configFactoryDefault();
     mMotor.setNeutralMode(NeutralMode.Coast);
-    mMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
+    mMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 20, 20, 0));
     mMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
     mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_3_Quadrature, 250);
     mMotor.setStatusFramePeriod(StatusFrame.Status_6_Misc, 250);
@@ -37,14 +47,21 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void set(double percent){
     mMotor.set(percent);
+    mTimer.reset();
+    mTimer.start();
   }
 
-  public void run(){
+  public void start(){
     set(Constants.Intake.kSpeed);
   }
 
   public void stop(){
     mMotor.stopMotor();
+    mTimer.reset();
+  }
+
+  public boolean ballDetected(){
+    return (mMotor.getSupplyCurrent() > 5) && mTimer.get() > 0.125;
   }
 
 }

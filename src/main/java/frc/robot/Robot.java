@@ -17,11 +17,12 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    mRobotContainer.updateField();
   }
 
   @Override
   public void disabledInit() {
-    mRobotContainer.stopAll();
+    mRobotContainer.stopAll().schedule();
   }
 
   @Override

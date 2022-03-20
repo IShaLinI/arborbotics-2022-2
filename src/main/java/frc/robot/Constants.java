@@ -1,12 +1,39 @@
 package frc.robot;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 
 public final class Constants {
+
+    public static class Telemetry {
+        public static final boolean IntakePistons = true;
+        public static final boolean Intake = true;
+        public static final boolean Flywheel = true;
+        public static final boolean Hood = true;
+        public static final boolean Accelerator = true;
+        public static final boolean Drivetrain = true;
+        public static final boolean Lift = true;
+        public static final boolean Vision = true;
+    }
+
+    public static class DriveProfile{
+        public static final double kMaxDriveSpeed = 3; //Meters/s
+        public static final double kMaxTurnSpeed = Units.degreesToRadians(360*3); //Rad/s
+
+        public static final double kModDriveSpeed = 5; //Meters/s
+
+        public static final double kDriveForwardAccel = 5; //Meters/s^2
+        public static final double kDriveBackwardAccel = 5; //Meters/s^2
+        public static final double kDriveForwardDecel = 5; //Meters/s^2
+        public static final double kDriveBackwardDecel = 5; //Meters/s^2
+        public static final double kTurnAccel = Units.degreesToRadians(360*3); //Rad/s^2
+    }
+
     public static class CAN{
         public static final int kDrive_FrontLeft = 1;
         public static final int kDrive_FrontRight = 2;
@@ -29,6 +56,27 @@ public final class Constants {
 
     public static class Intake {
         public static final double kSpeed = 0.5;
+    }
+
+    public static class Flywheel {
+        public static final double kP = 0;
+        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/6380d);
+        public static final double kRPMConversionFactor = (600d/2048d) * 1.5;
+        public static final double kRPMTolerance = 50;
+    }
+
+    public static class Hood {
+        public static final double kP = 0;
+        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/11000d); //TODO find kS
+        public static final double kAngleConversionFactor = (1d/(((10*5*3)*(3/2d)*(5/2d))))/360d;
+        public static final double kAngleTolerance = .25;
+    }
+
+    public static class Drivetrain {
+        
+        public static final double kTrackwidth = 0.61568;
+        public static final double kDistancePerPulse = (2 * Math.PI * Units.inchesToMeters(3)) / (2048 * KitbotGearing.k10p71.value); // Conversion between Counts and Meters
+
     }
     
     public static class Vision{
