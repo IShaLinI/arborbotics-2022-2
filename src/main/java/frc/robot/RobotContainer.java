@@ -86,10 +86,11 @@ public class RobotContainer {
       drivetrain.new VisionAimAssist(vision.visionSupplier)
     );
 
-    mDriverController.b().whenPressed(
-        new ParallelCommandGroup(
-          new InstantCommand(() -> flywheel.setTargetRPM(6380*1.5), flywheel),
-          new InstantCommand(() -> hood.setTargetAngle(10), hood)
+    mDriverController.b().whenHeld(
+        new StartEndCommand(
+          () -> flywheel.setTargetRPM(6380*1.5),
+          () -> flywheel.stop(),
+          flywheel
         )
     );
 
