@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -11,15 +10,14 @@ import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.autonomous.Trajectories;
-import frc.robot.autonomous.routines.BlueAllience.BlueDoubleSteal;
+import frc.robot.autonomous.routines.test.RoutineTesting;
 import frc.robot.custom.ArborMath;
 import frc.robot.custom.controls.CommandXboxController;
 import frc.robot.custom.controls.Deadbander;
@@ -76,7 +74,7 @@ public class RobotContainer {
 
   private void configureButtonBindings() {
 
-    mDriverController.a().whenHeld(
+    mDriverController.rightBumper().whenHeld(
       new StartEndCommand(
         pistons::extend, 
         pistons::retract,
@@ -84,18 +82,28 @@ public class RobotContainer {
       )
     );
 
+    mDriverController.a().whenHeld(
+      drivetrain.new VisionAimAssist(vision.visionSupplier)
+    );
+
+    mDriverController.b().whenPressed(
+        new ParallelCommandGroup(
+          new InstantCommand(() -> flywheel.setTargetRPM(6380*1.5), flywheel),
+          new InstantCommand(() -> hood.setTargetAngle(10), hood)
+        )
+    );
+
   }
   
   public void configureAutoChooser(){
     mAutoChooser.setDefaultOption("Nothing", null);
     mAutoChooser.addOption("Test", 
-      new BlueDoubleSteal(drivetrain, intake, pistons, flywheel, accelerator, hood, vision.visionSupplier)
+      new RoutineTesting(drivetrain, intake, pistons, flywheel, hood, accelerator, vision.visionSupplier)
     );
     SmartDashboard.putData("Auto Chooser", mAutoChooser);
   }
 
   public void updateField(){
-
     if(intakeExtended.getAsBoolean()){
       mIntakeVisualizer.setPose(
         new Pose2d(
@@ -115,6 +123,9 @@ public class RobotContainer {
     }
 
     mField.setRobotPose(drivetrain.getRobotPosition());
+
+    vision.visionSupplier.processSim(drivetrain.getRobotPosition());
+
   }
 
 

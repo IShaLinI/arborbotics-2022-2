@@ -1,8 +1,11 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.Logger;
 
 public class Robot extends TimedRobot {
 
@@ -12,11 +15,13 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     mRobotContainer = new RobotContainer();
+    Logger.configureLoggingAndConfig(mRobotContainer, false);
   }
 
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    Logger.updateEntries();
     mRobotContainer.updateField();
   }
 
@@ -44,4 +49,10 @@ public class Robot extends TimedRobot {
   public void testInit() {
     CommandScheduler.getInstance().cancelAll();
   }
+
+  @Override
+  public void simulationInit() {
+      DriverStation.silenceJoystickConnectionWarning(true);
+  }
+
 }

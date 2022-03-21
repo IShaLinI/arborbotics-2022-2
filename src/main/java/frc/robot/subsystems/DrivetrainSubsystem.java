@@ -22,7 +22,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -45,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
 
 public class DrivetrainSubsystem extends SubsystemBase {
 
@@ -194,8 +194,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
   //
 
   public void stop(){
-    mFrontLeft.stopMotor();
-    mFrontRight.stopMotor();
+    mFrontLeft.set(0);
+    mFrontRight.set(0);
   }
 
   public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
@@ -230,11 +230,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
     resetOdometry(new Pose2d());
   }
   public void resetOdometry(Pose2d newPose){
-
-    // if(RobotBase.isSimulation()){
-    //   resetSimulation();
-    // }
-
     resetEncoders();
     mPathPoints.clear();
     mOdometry.resetPosition(newPose, mPigeon.getRotation2d());
@@ -399,6 +394,78 @@ public class DrivetrainSubsystem extends SubsystemBase {
     @Override
     public boolean isFinished() {
       return timer.get() > trajectory.getTotalTimeSeconds();
+    }
+  }
+
+  public class TurnByAngleCommand extends CommandBase {
+
+    double mSetpoint;
+    double mStartPoint;
+
+    final PIDController mPIDController = new PIDController(1/2d, 0, 1d/3000);
+
+   /**
+    * Turn a specified Degree Amount
+    */
+    public TurnByAngleCommand(double mSetpoint) {
+      this.mSetpoint = mSetpoint;
+    }
+
+    @Override
+    public void initialize() {
+      this.mStartPoint = mPigeon.getYaw();
+    }
+
+    @Override
+    public void execute() {
+      double output = mPIDController.calculate(mPigeon.getYaw(), mStartPoint + mSetpoint);
+      mFrontLeft.setVoltage(-output*12);
+      mFrontRight.setVoltage(output*12);
+
+    }
+
+    @Override
+    public boolean isFinished() {
+      return Math.abs((mStartPoint + mSetpoint) - mPigeon.getYaw()) <= .5;
+    }
+
+  }
+
+  public class VisionAimAssist extends CommandBase{
+    
+    PIDController mVisionPID = new PIDController(1/60d, 0, 1d/3000);
+
+    double startPoint;
+
+    VisionSupplier vision;
+
+    public VisionAimAssist(VisionSupplier vision){
+      this.vision = vision;
+    }
+
+    @Override
+    public void initialize() {
+        vision.enableLEDs();
+        startPoint = mPigeon.getYaw();
+    }
+
+    @Override
+    public void execute() {
+
+      if(vision.hasTarget()){
+        double effort = mVisionPID.calculate(vision.getYaw(), 0);
+        SmartDashboard.putNumber("effort", effort);
+        mFrontLeft.setVoltage(-effort*12);
+        mFrontRight.setVoltage(effort*12);
+      }else{
+        mFrontLeft.setVoltage(0);
+        mFrontRight.setVoltage(0);
+      }
+    }
+    @Override
+    public void end(boolean interrupted) {
+        stop();
+        vision.disableLEDs();
     }
   }
 

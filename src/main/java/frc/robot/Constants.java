@@ -10,16 +10,7 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 
 public final class Constants {
 
-    public static class Telemetry {
-        public static final boolean IntakePistons = true;
-        public static final boolean Intake = true;
-        public static final boolean Flywheel = true;
-        public static final boolean Hood = true;
-        public static final boolean Accelerator = true;
-        public static final boolean Drivetrain = true;
-        public static final boolean Lift = true;
-        public static final boolean Vision = true;
-    }
+    public static final boolean logging = true;
 
     public static class DriveProfile{
         public static final double kMaxDriveSpeed = 3; //Meters/s
@@ -59,8 +50,7 @@ public final class Constants {
     }
 
     public static class Flywheel {
-        public static final double kP = 0;
-        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/6380d);
+        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/6380d, 0.009318);
         public static final double kRPMConversionFactor = (600d/2048d) * 1.5;
         public static final double kRPMTolerance = 50;
     }
@@ -85,12 +75,12 @@ public final class Constants {
         //public static final double kTargetHeightMeters = Units.feetToMeters(8 + 8 / 12); // Field Vision Target 
         public static final double kTargetHeightMeters = Units.inchesToMeters(81.75); // Y4 Vision Target
         public static final double kCameraPitchRadians = Units.degreesToRadians(42);
-        public static final double kMaxLEDRange = 20;
+        public static final double kMaxLEDRange = 200;
         public static final double kCamDiagFOV = 67.8; // degrees
         public static final int kCamResolutionWidth = 320; // pixels
         public static final int kCamResolutionHeight = 240; // pixels
         public static final double kTargetWidth = Units.feetToMeters(4);  
-        public static final double kMinTargetArea = 10;
+        public static final double kMinTargetArea = 0;
         public static final Pose2d kTargetPos = new Pose2d(8.259, 4.138, Rotation2d.fromDegrees(0));
         public static final Transform2d kCameraToRobot = new Transform2d(
             new Translation2d(-0.008486, -0.403435),

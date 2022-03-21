@@ -10,17 +10,16 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 
-public class IntakePistonsSubsystem extends SubsystemBase {
+public class IntakePistonsSubsystem extends SubsystemBase implements Loggable{
 
   private DoubleSolenoid mLeftPiston = new DoubleSolenoid(7, PneumaticsModuleType.CTREPCM, 0, 1);
   private DoubleSolenoid mRightPiston = new DoubleSolenoid(7, PneumaticsModuleType.CTREPCM, 6, 7);
 
   public IntakePistonsSubsystem(){
     retract();
-    if(Constants.Telemetry.IntakePistons){
-      Shuffleboard.getTab("Intake").add("Pistons Extended", extended());
-    }
   }
 
   public void extend(){
@@ -32,6 +31,7 @@ public class IntakePistonsSubsystem extends SubsystemBase {
     mRightPiston.set(Value.kForward);
   }
 
+  @Log(tabName = "intake")
   public boolean extended(){
     return mLeftPiston.get() != Value.kForward;
   }

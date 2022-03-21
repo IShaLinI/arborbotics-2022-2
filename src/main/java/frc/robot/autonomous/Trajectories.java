@@ -28,8 +28,8 @@ public class Trajectories {
         5,
         6,
         List.of(
-            new Pose2d(1, 1, Rotation2d.fromDegrees(0)),
-            new Pose2d(3, 3, Rotation2d.fromDegrees(0))
+            new Pose2d(7.74, 2.746, Rotation2d.fromDegrees(-110.5)),
+            new Pose2d(5.658, 2.2, Rotation2d.fromDegrees(-149))
         ),
         false,
         "GENERATE"

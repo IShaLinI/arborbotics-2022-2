@@ -33,8 +33,8 @@ public class IntakePath extends ParallelRaceGroup {
         )
         .andThen(
           new ParallelCommandGroup(
-            new InstantCommand(pistons::extend, pistons),
-            new InstantCommand(intake::start, intake)
+            new InstantCommand(pistons::retract, pistons),
+            new InstantCommand(intake::stop, intake)
           )
         )
     );

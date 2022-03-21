@@ -7,9 +7,9 @@ import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import io.github.oblarg.oblog.annotations.Log;
 
 public class IntakeSubsystem extends SubsystemBase {
   
@@ -19,12 +19,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public IntakeSubsystem() {
     configureMotor();
-
-    if(Constants.Telemetry.Intake){
-      Shuffleboard.getTab("Intake").add("Intake Running", mMotor.get() != 0);
-      Shuffleboard.getTab("Intake").add("Intake Amps", mMotor.getSupplyCurrent());
-    }
-
   }
 
   public void configureMotor(){
@@ -60,8 +54,14 @@ public class IntakeSubsystem extends SubsystemBase {
     mTimer.reset();
   }
 
+  @Log(tabName = "Intake")
+  private double getAmps(){
+    return mMotor.getSupplyCurrent();
+  }
+
+  @Log(tabName = "Intake")
   public boolean ballDetected(){
-    return (mMotor.getSupplyCurrent() > 5) && mTimer.get() > 0.125;
+    return (getAmps() > 5) && mTimer.get() > 0.125;
   }
 
 }

@@ -3,31 +3,25 @@ package frc.robot.subsystems.shooter;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.custom.ArborMath;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 
-public class HoodSubsystem extends SubsystemBase {
+public class HoodSubsystem extends SubsystemBase implements Loggable{
 
   private final CANSparkMax mMotor = new CANSparkMax(Constants.CAN.kHood, MotorType.kBrushless);
 
-  private PIDController mPID = new PIDController(Constants.Flywheel.kP, 0, 0);
+  private PIDController mPID = new PIDController(0, 0, 0);
   private final SimpleMotorFeedforward mFeedForward = Constants.Flywheel.kFeedForward;
 
   public double mTargetAngle, mCurrentAngle, mPIDEffort, mFFEffort;
 
   public HoodSubsystem() {
     configureMotor();
-
-    if(Constants.Telemetry.Hood){
-      Shuffleboard.getTab("Shooter").add("Hood Angle", getAngle());
-      Shuffleboard.getTab("Shooter").add("Hood At Target", ArborMath.inTolerance(getAngle(), Constants.Hood.kAngleTolerance));
-    }
-
   }
 
   public void configureMotor(){
@@ -56,6 +50,7 @@ public class HoodSubsystem extends SubsystemBase {
     mTargetAngle = newTarget;
   }
 
+  @Log(tabName = "Shooter")
   public double getAngle(){
     return mMotor.getEncoder().getPosition();
   }

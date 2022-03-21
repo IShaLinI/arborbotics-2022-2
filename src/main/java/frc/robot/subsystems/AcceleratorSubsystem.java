@@ -16,9 +16,6 @@ public class AcceleratorSubsystem extends SubsystemBase {
 
   public AcceleratorSubsystem() {
     configureMotor();
-    if(Constants.Telemetry.Accelerator){
-      Shuffleboard.getTab("Accelerator").add("Accelerator Speed", mMotor.get());
-    }
   }
 
   public void configureMotor(){

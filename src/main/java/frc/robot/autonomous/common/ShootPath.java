@@ -15,7 +15,7 @@ public class ShootPath extends SequentialCommandGroup {
   public ShootPath(Trajectory path, DrivetrainSubsystem drivetrain, HoodSubsystem hood, FlywheelSubsystem flywheel, VisionSupplier vision) {
     addCommands(
       drivetrain.new TrajectoryFollowerCommand(path),
-      new AimRoutine(drivetrain, hood, flywheel, vision)
+      new AimRoutine(drivetrain, vision)
     );
   }
 }
