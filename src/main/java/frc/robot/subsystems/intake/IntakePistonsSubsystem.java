@@ -7,9 +7,7 @@ package frc.robot.subsystems.intake;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -31,7 +29,7 @@ public class IntakePistonsSubsystem extends SubsystemBase implements Loggable{
     mRightPiston.set(Value.kForward);
   }
 
-  @Log(tabName = "intake")
+  @Log(tabName = "Intake")
   public boolean extended(){
     return mLeftPiston.get() != Value.kForward;
   }

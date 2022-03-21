@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.custom.ArborMath;
 import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
 
 public class FlywheelSubsystem extends SubsystemBase implements Loggable {
@@ -76,22 +77,24 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   }
 
+  @Config(tabName = "Shooter", name = "Set RPM")
   public void setTargetRPM(double newTarget){
     mTargetRPM = newTarget;
   }
 
-  @Log(tabName = "Shooter")
+  @Log(tabName = "Shooter", name = "RPM")
   public double getRPM(){
     return ((mMotor.getSelectedSensorVelocity() * 60) / 2048) * 1.5;
   }
 
+  @Log(tabName = "Shooter", name = "Flywheel Ready")
   public boolean ready(){
     return ArborMath.inTolerance(Math.abs(mTargetRPM-mCurrentRPM), 50) && mTargetRPM != 0;
   }
 
   public void stop(){
     setTargetRPM(0);
-    mMotor.stopMotor();
+    mMotor.setVoltage(0);
   }
 
   @Override
@@ -120,7 +123,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   }
 
-  @Log(tabName = "Shooter")
+  @Log(tabName = "Shooter", name = "RPM Target")
   private double getRPMTarget(){
     return mTargetRPM;
   }
