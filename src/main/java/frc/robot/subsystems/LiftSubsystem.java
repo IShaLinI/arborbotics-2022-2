@@ -21,7 +21,7 @@ public class LiftSubsystem extends SubsystemBase {
   public void configureMotor(){
     mLeftMotor.configFactoryDefault();
     mLeftMotor.setNeutralMode(NeutralMode.Coast);
-    mLeftMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
+    mLeftMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 80, 1));
     mLeftMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
     mLeftMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_3_Quadrature, 250);
     mLeftMotor.setStatusFramePeriod(StatusFrame.Status_6_Misc, 250);
@@ -37,7 +37,7 @@ public class LiftSubsystem extends SubsystemBase {
 
     mRightMotor.configFactoryDefault();
     mRightMotor.setNeutralMode(NeutralMode.Coast);
-    mRightMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
+    mRightMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 80, 1));
     mRightMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
     mRightMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_3_Quadrature, 250);
     mRightMotor.setStatusFramePeriod(StatusFrame.Status_6_Misc, 250);
