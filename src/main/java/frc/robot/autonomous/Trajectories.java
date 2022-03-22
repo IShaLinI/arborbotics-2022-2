@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.util.Units;
 
 public class Trajectories {
     
@@ -25,11 +26,11 @@ public class Trajectories {
 
 
     public static Trajectory Test = generateTrajectory(
-        5,
+        3,
         6,
         List.of(
-            new Pose2d(7.74, 2.746, Rotation2d.fromDegrees(-110.5)),
-            new Pose2d(5.658, 2.2, Rotation2d.fromDegrees(-149))
+            new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
+            new Pose2d(Units.feetToMeters(13), 0, Rotation2d.fromDegrees(0))
         ),
         false,
         "GENERATE"

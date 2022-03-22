@@ -23,6 +23,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void configureMotor(){
     mMotor.configFactoryDefault();
+    mMotor.setInverted(true);
     mMotor.setNeutralMode(NeutralMode.Coast);
     mMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 20, 20, 0));
     mMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);

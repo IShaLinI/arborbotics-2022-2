@@ -6,12 +6,16 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
+import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.BasePigeonSimCollection;
+import com.ctre.phoenix.sensors.PigeonIMU_StatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
 
@@ -100,23 +104,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
     mBackLeft.configFactoryDefault();
     mBackRight.configFactoryDefault();
 
-    mFrontLeft.setNeutralMode(NeutralMode.Brake);
-    mFrontRight.setNeutralMode(NeutralMode.Brake);
-    mBackLeft.setNeutralMode(NeutralMode.Brake);
-    mBackRight.setNeutralMode(NeutralMode.Brake);
-
-    if (RobotBase.isReal()) {
-      mFrontLeft.setInverted(TalonFXInvertType.CounterClockwise);
-      mBackLeft.setInverted(TalonFXInvertType.FollowMaster);
-      mFrontRight.setInverted(TalonFXInvertType.Clockwise);
-      mBackRight.setInverted(TalonFXInvertType.FollowMaster);
-    } else {
-      mFrontLeft.setInverted(TalonFXInvertType.CounterClockwise);
-      mBackLeft.setInverted(TalonFXInvertType.FollowMaster);
-      mFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
-      mBackRight.setInverted(TalonFXInvertType.FollowMaster);
-    }
-
     mFrontLeft.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
     mFrontLeft.configVelocityMeasurementWindow(1);
 
@@ -152,6 +139,39 @@ public class DrivetrainSubsystem extends SubsystemBase {
     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
+ 
+     // Set the back motors to follow the commands of the front
+     mBackLeft.follow(mFrontLeft);
+     mBackRight.follow(mFrontRight);
+ 
+     // Set the neutral modes
+     mFrontLeft.setNeutralMode(NeutralMode.Brake);
+     mFrontRight.setNeutralMode(NeutralMode.Brake);
+     mBackLeft.setNeutralMode(NeutralMode.Brake);
+     mBackRight.setNeutralMode(NeutralMode.Brake);
+ 
+     // Makes Green go Forward. Sim is weird so thats what the if statement is for
+     if (RobotBase.isReal()) {
+       mFrontLeft.setInverted(TalonFXInvertType.CounterClockwise);
+       mBackLeft.setInverted(TalonFXInvertType.FollowMaster);
+       mFrontRight.setInverted(TalonFXInvertType.Clockwise);
+       mBackRight.setInverted(TalonFXInvertType.FollowMaster);
+     } else {
+       mFrontLeft.setInverted(TalonFXInvertType.CounterClockwise);
+       mBackLeft.setInverted(TalonFXInvertType.FollowMaster);
+       mFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
+       mBackRight.setInverted(TalonFXInvertType.FollowMaster);
+     }
+ 
+     // Encoders
+     mFrontLeft.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+     mFrontRight.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+ 
+     // Limits the current to prevent breaker tripping
+     mFrontLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 65, 0.5)); // | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
+     mFrontRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 65, 0.5));// | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
+     mBackLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 60, 65, 0.5)); //  | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
+     mBackRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 60, 65, 0.5)); // | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
 
   }
 
@@ -213,12 +233,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     final double leftOutput = mPID.calculate(getWheelVelocities().leftMetersPerSecond, speeds.leftMetersPerSecond);
     final double rightOutput = mPID.calculate(getWheelVelocities().rightMetersPerSecond, speeds.rightMetersPerSecond);
-
-    SmartDashboard.putNumber("LeftVel", mFrontLeft.getSelectedSensorVelocity());
-    SmartDashboard.putNumber("Right", mFrontRight.getSelectedSensorVelocity());
-
+    
     mFrontLeft.setVoltage(leftOutput + feedForward.get(0,0));
     mFrontRight.setVoltage(rightOutput + feedForward.get(1,0));
+
   }
 
   public void resetEncoders(){

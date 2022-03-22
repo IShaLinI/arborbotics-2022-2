@@ -26,7 +26,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
   private final WPI_TalonFX mMotor = new WPI_TalonFX(Constants.CAN.kFlywheelMaster);
   private final TalonFXSimCollection mMotorSim = mMotor.getSimCollection();
 
-  private PIDController mPID = new PIDController(0.2, 0, 0);
+  private PIDController mPID = new PIDController(0, 0, 0);
   private final SimpleMotorFeedforward mFeedForward = Constants.Flywheel.kFeedForward;
 
   public double mTargetRPM, mCurrentRPM, mPIDEffort, mFFEffort;
@@ -50,6 +50,8 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
     mMotor.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
     mMotor.configVelocityMeasurementWindow(1);
+
+    mMotor.setInverted(true);
 
     mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 250);
     mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 250);

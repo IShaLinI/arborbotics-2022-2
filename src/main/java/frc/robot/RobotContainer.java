@@ -49,10 +49,10 @@ public class RobotContainer {
   private SlewRateLimiter mIntakeAnimator = new SlewRateLimiter(1);
 
   private CommandXboxController mDriverController = new CommandXboxController(0);
-
+  
   public RobotContainer() {
 
-    LiveWindow.disableAllTelemetry();
+    //LiveWindow.disableAllTelemetry();
 
     configureButtonBindings();
     configureAutoChooser();
@@ -74,10 +74,14 @@ public class RobotContainer {
   private void configureButtonBindings() {
 
     mDriverController.rightBumper().whenHeld(
-      new StartEndCommand(
-        pistons::extend, 
-        pistons::retract,
-        pistons
+      new ParallelCommandGroup(
+        new StartEndCommand(
+          pistons::extend, 
+          pistons::retract,
+          pistons
+        ),
+        new StartEndCommand(
+          intake::start, intake::stop, intake)
       )
     );
 
@@ -87,10 +91,18 @@ public class RobotContainer {
 
     mDriverController.b().whenHeld(
         new StartEndCommand(
-          () -> flywheel.setTargetRPM(6380*1.5),
+          () -> flywheel.setTargetRPM(2000),
           () -> flywheel.stop(),
           flywheel
         )
+    );
+
+    mDriverController.y().whenHeld(
+      new StartEndCommand(
+        () -> accelerator.set(-1),
+        accelerator::stop,
+        accelerator
+      )
     );
 
   }
