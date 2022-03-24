@@ -67,7 +67,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final DifferentialDriveKinematics mKinematics = new DifferentialDriveKinematics(Constants.Drivetrain.kTrackwidth);
   private final DifferentialDriveOdometry mOdometry = new DifferentialDriveOdometry(mPigeon.getRotation2d());
 
-  private PIDController mPID = new PIDController(2, 0, 0);
+  private PIDController mPID = new PIDController(1, 0, 0);
   private RamseteController mRamseteController = new RamseteController();
 
   public static final LinearSystem<N2,N2,N2> mDrivetrainPlant = LinearSystemId.identifyDrivetrainSystem(
@@ -162,16 +162,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
        mFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
        mBackRight.setInverted(TalonFXInvertType.FollowMaster);
      }
- 
-     // Encoders
      mFrontLeft.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
      mFrontRight.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
- 
-     // Limits the current to prevent breaker tripping
-     mFrontLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 65, 0.5)); // | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
-     mFrontRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 65, 0.5));// | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
-     mBackLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 60, 65, 0.5)); //  | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
-     mBackRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 60, 65, 0.5)); // | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
+
+     mFrontLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+     mFrontRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+     mBackLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+     mBackRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
 
   }
 
@@ -459,6 +456,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     public VisionAimAssist(VisionSupplier vision){
       this.vision = vision;
+
+      mVisionPID.setTolerance(5, 10);
+
     }
 
     @Override
@@ -469,7 +469,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     @Override
     public void execute() {
-
       if(vision.hasTarget()){
         double effort = mVisionPID.calculate(vision.getYaw(), 0);
         SmartDashboard.putNumber("effort", effort);
@@ -485,6 +484,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
         stop();
         vision.disableLEDs();
     }
+
+    @Override
+    public boolean isFinished() {
+        return mVisionPID.atSetpoint();
+    }
+
   }
 
 }
