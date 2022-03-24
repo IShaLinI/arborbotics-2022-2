@@ -86,7 +86,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   @Log(tabName = "Shooter", name = "RPM")
   public double getRPM(){
-    return ((mMotor.getSelectedSensorVelocity() * 60) / 2048) * 1.5;
+    return ((mMotor.getSelectedSensorVelocity()/2048)*600);
   }
 
   @Log(tabName = "Shooter", name = "Flywheel Ready")
