@@ -135,10 +135,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
        mFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
        mBackRight.setInverted(TalonFXInvertType.FollowMaster);
      }
-<<<<<<< HEAD
  
-=======
->>>>>>> 5709234c9a5fe05091373a6a256a2da9d560deb1
      mFrontLeft.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
      mFrontRight.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
@@ -146,7 +143,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
      mFrontRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
      mBackLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
      mBackRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
-<<<<<<< HEAD
 
      mFrontLeft.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
      mFrontLeft.configVelocityMeasurementWindow(1);
@@ -183,8 +179,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
      mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
      mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
      mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
-=======
->>>>>>> 5709234c9a5fe05091373a6a256a2da9d560deb1
 
   }
 
