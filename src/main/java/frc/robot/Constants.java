@@ -42,7 +42,7 @@ public final class Constants {
     }
 
     public static class Accelerator {
-        public static final double kSpeed = 0.5;
+        public static final double kSpeed = 1.0;
     }
 
     public static class Intake {
@@ -58,8 +58,7 @@ public final class Constants {
     public static class Hood {
         public static final double kP = 0;
         public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/11000d); //TODO find kS
-        public static final double kAngleConversionFactor = (1d/(((10*5*3)*(3/2d)*(5/2d))))/360d;
-        public static final double kAngleTolerance = .25;
+        public static final double kAngleConversionFactor = ((((10*5*3)*(3/2d)*(5/2d))))/360d;
     }
 
     public static class Drivetrain {
