@@ -6,6 +6,9 @@ import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
+
+import org.opencv.features2d.FastFeatureDetector;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
@@ -23,15 +26,17 @@ import io.github.oblarg.oblog.annotations.Log;
 
 public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
-  private final WPI_TalonFX mMotor = new WPI_TalonFX(Constants.CAN.kFlywheelMaster);
-  private final TalonFXSimCollection mMotorSim = mMotor.getSimCollection();
+  private final WPI_TalonFX mMaster = new WPI_TalonFX(Constants.CAN.kFlywheelMaster);
+  private final WPI_TalonFX mSlave = new WPI_TalonFX(Constants.CAN.kFlywheelSlave);
 
-  private PIDController mPID = new PIDController(0, 0, 0);
+  private final TalonFXSimCollection mMasterSim = mMaster.getSimCollection();
+
+  private PIDController mPID = new PIDController(64d/9570d, 0, 0);
   private final SimpleMotorFeedforward mFeedForward = Constants.Flywheel.kFeedForward;
 
   public double mTargetRPM, mCurrentRPM, mPIDEffort, mFFEffort;
 
-  public static final LinearSystem<N1, N1, N1> kPlant = LinearSystemId.identifyVelocitySystem(12d/6380d, 0.009318);
+  public static final LinearSystem<N1, N1, N1> kPlant = LinearSystemId.identifyVelocitySystem(12d/6380d, 0.12);
 
   private FlywheelSim mSim = new FlywheelSim(
     kPlant,
@@ -45,21 +50,37 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
   }
 
   public void configureMotor(){
-    mMotor.configFactoryDefault();
-    mMotor.setNeutralMode(NeutralMode.Coast);
+    mMaster.configFactoryDefault();
+    mMaster.setNeutralMode(NeutralMode.Coast);
 
-    mMotor.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
-    mMotor.configVelocityMeasurementWindow(1);
+    mMaster.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
+    mMaster.configVelocityMeasurementWindow(1);
 
-    mMotor.setInverted(true);
+    mMaster.setInverted(true);
 
-    mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 250);
-    mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 250);
-    mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 250);
-    mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 250);
-    mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 250);
+    mMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 250);
+    mMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 250);
+    mMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 250);
+    mMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 250);
+    mMaster.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 250);
 
-    mMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+    mMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+
+    mSlave.configFactoryDefault();
+    mSlave.setNeutralMode(NeutralMode.Coast);
+
+    mSlave.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
+    mSlave.configVelocityMeasurementWindow(1);
+
+    mSlave.setInverted(false);
+
+    mSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 250);
+    mSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 250);
+    mSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 250);
+    mSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 250);
+    mSlave.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 250);
+
+    mSlave.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
 
   }
   
@@ -75,7 +96,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
       mPIDEffort = 0;
     }
 
-    mMotor.setVoltage(mPIDEffort + mFFEffort);
+    mMaster.setVoltage(mPIDEffort + mFFEffort);
 
   }
 
@@ -86,17 +107,17 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   @Log(tabName = "Shooter", name = "RPM")
   public double getRPM(){
-    return ((mMotor.getSelectedSensorVelocity()/2048)*600);
+    return ((mMaster.getSelectedSensorVelocity()/2048)*600*1.5);
   }
 
   @Log(tabName = "Shooter", name = "Flywheel Ready")
   public boolean ready(){
-    return ArborMath.inTolerance(Math.abs(mTargetRPM-mCurrentRPM), 50) && mTargetRPM != 0;
+    return ArborMath.inTolerance(Math.abs(mTargetRPM-mCurrentRPM), 100) && mTargetRPM != 0;
   }
 
   public void stop(){
     setTargetRPM(0);
-    mMotor.setVoltage(0);
+    mMaster.setVoltage(0);
   }
 
   @Override
@@ -111,17 +132,17 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
   @Override
   public void simulationPeriodic() {
 
-    mSim.setInput(mMotor.get() * RobotController.getInputVoltage());
+    mSim.setInput(mMaster.get() * RobotController.getInputVoltage());
 
     mSim.update(0.02);
 
-    double flywheelNativeVelocity = mSim.getAngularVelocityRPM() * 2048 / (60 * 10) * 1d/1.5;
+    double flywheelNativeVelocity = mSim.getAngularVelocityRPM() * 2048d / (60d * 10d) * 1d/1.5d;
     double flywheelNativePositionDelta = flywheelNativeVelocity*10*0.02;
 
-    mMotorSim.setIntegratedSensorVelocity((int)flywheelNativeVelocity);
-    mMotorSim.addIntegratedSensorPosition((int)flywheelNativePositionDelta);
+    mMasterSim.setIntegratedSensorVelocity((int)flywheelNativeVelocity);
+    mMasterSim.addIntegratedSensorPosition((int)flywheelNativePositionDelta);
 
-    mMotorSim.setBusVoltage(RobotController.getBatteryVoltage());
+    mMasterSim.setBusVoltage(RobotController.getBatteryVoltage());
 
   }
 

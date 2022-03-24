@@ -18,7 +18,9 @@ public class RoutineTesting extends SequentialCommandGroup {
   public RoutineTesting(DrivetrainSubsystem drivetrain, IntakeSubsystem intake, IntakePistonsSubsystem pistons, FlywheelSubsystem flywheel, HoodSubsystem hood,AcceleratorSubsystem accelerator ,VisionSupplier vision) {
     addCommands(
       new InstantCommand(() -> drivetrain.resetOdometry(Trajectories.Test.getInitialPose()), drivetrain),
-      drivetrain.new TrajectoryFollowerCommand(Trajectories.Test)
+      new IntakePath(Trajectories.Test, drivetrain, intake, pistons),
+      new AimRoutine(drivetrain, vision),
+      new FireRoutine(flywheel, hood, accelerator, vision, pistons)
     );
   }
 }

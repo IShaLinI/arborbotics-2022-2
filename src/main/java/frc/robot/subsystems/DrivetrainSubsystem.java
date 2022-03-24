@@ -19,6 +19,9 @@ import com.ctre.phoenix.sensors.PigeonIMU_StatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
 
+import org.opencv.photo.Photo;
+import org.photonvision.PhotonUtils;
+
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
@@ -26,6 +29,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -67,7 +71,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final DifferentialDriveKinematics mKinematics = new DifferentialDriveKinematics(Constants.Drivetrain.kTrackwidth);
   private final DifferentialDriveOdometry mOdometry = new DifferentialDriveOdometry(mPigeon.getRotation2d());
 
-  private PIDController mPID = new PIDController(2, 0, 0);
+  private PIDController mPID = new PIDController(1, 0, 0);
   private RamseteController mRamseteController = new RamseteController();
 
   public static final LinearSystem<N2,N2,N2> mDrivetrainPlant = LinearSystemId.identifyDrivetrainSystem(
@@ -93,8 +97,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private FieldObject2d mRobotPath = RobotContainer.getField().getObject("robot-path");
   private List<Pose2d> mPathPoints = new ArrayList<Pose2d>();
 
-  public DrivetrainSubsystem() {
+  VisionSupplier vision;
+
+  public DrivetrainSubsystem(VisionSupplier vision) {
     configureMotors();
+    this.vision = vision;
   }
 
   public void configureMotors(){
@@ -103,46 +110,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
     mFrontRight.configFactoryDefault();
     mBackLeft.configFactoryDefault();
     mBackRight.configFactoryDefault();
-
-    mFrontLeft.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
-    mFrontLeft.configVelocityMeasurementWindow(1);
-
-    mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
-    mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
-    mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
-    mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
-    mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
-
-    mFrontRight.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
-    mFrontRight.configVelocityMeasurementWindow(1);
-
-    mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
-    mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
-    mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
-    mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
-    mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
-
-    mBackLeft.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_100Ms);
-    mBackLeft.configVelocityMeasurementWindow(32);
-
-    mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
-    mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
-    mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
-    mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
-    mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
-
-    mBackRight.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_100Ms);
-    mBackRight.configVelocityMeasurementWindow(32);
-
-    mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
-    mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
-    mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
-    mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
-    mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
  
      // Set the back motors to follow the commands of the front
      mBackLeft.follow(mFrontLeft);
      mBackRight.follow(mFrontRight);
+    
+     
  
      // Set the neutral modes
      mFrontLeft.setNeutralMode(NeutralMode.Brake);
@@ -163,15 +136,49 @@ public class DrivetrainSubsystem extends SubsystemBase {
        mBackRight.setInverted(TalonFXInvertType.FollowMaster);
      }
  
-     // Encoders
      mFrontLeft.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
      mFrontRight.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
+     mFrontLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+     mFrontRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+     mBackLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+     mBackRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
+
+     mFrontLeft.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
+     mFrontLeft.configVelocityMeasurementWindow(1);
  
-     // Limits the current to prevent breaker tripping
-     mFrontLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 65, 0.5)); // | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
-     mFrontRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 65, 0.5));// | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
-     mBackLeft.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 60, 65, 0.5)); //  | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
-     mBackRight.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 60, 65, 0.5)); // | Enabled | 60a Limit | 65a Thresh | .5 sec Trigger Time
+     mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
+     mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
+     mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
+     mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
+     mFrontLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
+ 
+     mFrontRight.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
+     mFrontRight.configVelocityMeasurementWindow(1);
+ 
+     mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
+     mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
+     mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
+     mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
+     mFrontRight.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
+ 
+     mBackLeft.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_100Ms);
+     mBackLeft.configVelocityMeasurementWindow(32);
+ 
+     mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
+     mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
+     mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
+     mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
+     mBackLeft.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
+ 
+     mBackRight.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_100Ms);
+     mBackRight.configVelocityMeasurementWindow(32);
+ 
+     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_10_Targets, 227);
+     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_11_UartGadgeteer, 229);
+     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 233);
+     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_14_Turn_PIDF1, 239);
+     mBackRight.setStatusFramePeriod(StatusFrameEnhanced.Status_9_MotProfBuffer, 241);
 
   }
 
@@ -292,6 +299,25 @@ public class DrivetrainSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     mOdometry.update(mPigeon.getRotation2d(), getWheelDistances()[0], getWheelDistances()[1]);
+
+    // Pose2d pose = PhotonUtils.estimateFieldToRobot(
+    //   Constants.Vision.kCameraHeightMeters,
+    //   Constants.Vision.kTargetHeightMeters,
+    //   Constants.Vision.kCameraPitchRadians, 0, 0, gyroAngle, fieldToTarget, cameraToRobot)
+
+    Pose2d pose = PhotonUtils.estimateFieldToRobot(
+      PhotonUtils.estimateCameraToTarget(
+        PhotonUtils.estimateCameraToTargetTranslation(
+          vision.getDistance(),
+          Rotation2d.fromDegrees(vision.getYaw())
+        ),
+        Constants.Vision.kTargetPos,
+        mPigeon.getRotation2d()
+      ),
+      Constants.Vision.kTargetPos,
+      Constants.Vision.kCameraToRobot
+    );
+
   }
 
   public class TeleOpCommand extends CommandBase {

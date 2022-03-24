@@ -50,13 +50,18 @@ public class HoodSubsystem extends SubsystemBase implements Loggable{
     mTargetAngle = newTarget;
   }
 
+  public void set(double percent){
+    mMotor.set(percent);
+  }
+
   @Log(tabName = "Shooter")
   public double getAngle(){
     return mMotor.getEncoder().getPosition();
   }
 
   public boolean ready(){
-    return ArborMath.inTolerance(Math.abs(mTargetAngle-mCurrentAngle), 50);
+    //return ArborMath.inTolerance(Math.abs(mTargetAngle-mCurrentAngle), 50);
+    return true;
   }
 
   public void stop(){

@@ -46,14 +46,14 @@ public final class Constants {
     }
 
     public static class Intake {
-        public static final double kSpeed = 1;
+        public static final double kSpeed = .75;
     }
 
     public static class Flywheel {
-        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/6380d, 0.009318);
+        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(1.21 , 12d/(6380d*1.5d));
         public static final double kRPMConversionFactor = (600d/2048d) * 1.5;
         public static final double kRPMTolerance = 50;
-    }
+    }   
 
     public static class Hood {
         public static final double kP = 0;

@@ -12,7 +12,7 @@ import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
 public class AimRoutine extends ParallelRaceGroup {
   public AimRoutine(DrivetrainSubsystem drivetrain, VisionSupplier vision) {
     addCommands(
-      new WaitUntilCommand(() -> Math.abs(vision.getYaw()) < 0.5),
+      new WaitUntilCommand(() -> Math.abs(vision.getYaw()) < 0.25),
       drivetrain.new VisionAimAssist(vision)
     );
   }

@@ -27,10 +27,10 @@ public class Trajectories {
 
     public static Trajectory Test = generateTrajectory(
         3,
-        6,
+        2,
         List.of(
-            new Pose2d(0, 0, Rotation2d.fromDegrees(0)),
-            new Pose2d(Units.feetToMeters(13), 0, Rotation2d.fromDegrees(0))
+            new Pose2d(7.625, 1.95, Rotation2d.fromDegrees(-87.616)),
+            new Pose2d(7.6125, .9, Rotation2d.fromDegrees(-90))
         ),
         false,
         "GENERATE"

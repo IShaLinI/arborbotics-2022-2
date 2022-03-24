@@ -19,6 +19,7 @@ public class AcceleratorSubsystem extends SubsystemBase {
   public void configureMotor(){
     mMotor.configFactoryDefault();
     mMotor.setNeutralMode(NeutralMode.Coast);
+    mMotor.setInverted(true);
     mMotor.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 30, 30, 0));
     mMotor.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 250);
     mMotor.setStatusFramePeriod(StatusFrameEnhanced.Status_3_Quadrature, 250);

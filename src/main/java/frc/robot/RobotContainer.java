@@ -12,9 +12,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.autonomous.routines.test.RoutineTesting;
 import frc.robot.custom.ArborMath;
@@ -38,7 +42,7 @@ public class RobotContainer {
   private IntakePistonsSubsystem pistons = new IntakePistonsSubsystem();
   private FlywheelSubsystem flywheel = new FlywheelSubsystem();
   private HoodSubsystem hood = new HoodSubsystem();
-  private DrivetrainSubsystem drivetrain = new DrivetrainSubsystem();
+  private DrivetrainSubsystem drivetrain = new DrivetrainSubsystem(vision.visionSupplier);
 
   private Trigger intakeExtended = new Trigger(pistons::extended);
 
@@ -67,6 +71,10 @@ public class RobotContainer {
       )
     );
 
+    // hood.setDefaultCommand(
+    //   new RunCommand(() -> hood.set(mDriverController.getRightY()), hood)
+    // );
+
     NetworkTableInstance.getDefault().getTable("photonvision").getEntry("version").setValue("v2022.1.6");
 
   }
@@ -90,12 +98,34 @@ public class RobotContainer {
     );
 
     mDriverController.b().whenHeld(
-        new StartEndCommand(
-          () -> flywheel.setTargetRPM(2000),
-          () -> flywheel.stop(),
-          flywheel
-        )
-    );
+      new SequentialCommandGroup(
+        new ParallelCommandGroup(
+          new InstantCommand(() -> flywheel.setTargetRPM(2000), flywheel),
+          new InstantCommand(() -> hood.setTargetAngle(30), hood)
+        ),
+        new ParallelCommandGroup(
+          new WaitUntilCommand(flywheel::ready),
+          new WaitUntilCommand(hood::ready)
+        ),
+        new InstantCommand(pistons::extend, pistons),
+        new InstantCommand(accelerator::start, accelerator),
+        new WaitCommand(2)
+      )
+    ).whenReleased(
+    new ParallelCommandGroup(
+      //home hood
+      new InstantCommand(flywheel::stop, flywheel),
+      new InstantCommand(accelerator::stop, accelerator),
+      new InstantCommand(pistons::retract, pistons)
+    ));
+
+    // mDriverController.b().whenHeld(
+    //   new StartEndCommand(
+    //     () -> flywheel.setTargetRPM(4000),
+    //     flywheel::stop,
+    //     flywheel
+    //   )
+    // );
 
     mDriverController.y().whenHeld(
       new StartEndCommand(
@@ -104,7 +134,7 @@ public class RobotContainer {
         accelerator
       )
     );
-
+    
   }
   
   public void configureAutoChooser(){

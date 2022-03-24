@@ -23,7 +23,6 @@ import frc.robot.subsystems.intake.IntakeSubsystem;
 public class IntakePath extends ParallelRaceGroup {
   public IntakePath(Trajectory path, DrivetrainSubsystem drivetrain, IntakeSubsystem intake, IntakePistonsSubsystem pistons) {
     addCommands(
-        new WaitUntilCommand(intake::ballDetected),
         drivetrain.new TrajectoryFollowerCommand(path)
         .beforeStarting(
           new ParallelCommandGroup(
