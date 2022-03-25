@@ -5,28 +5,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.BasePigeonSimCollection;
-import com.ctre.phoenix.sensors.PigeonIMU_StatusFrame;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
-
-import org.opencv.photo.Photo;
 import org.photonvision.PhotonUtils;
-
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -115,8 +110,6 @@ public class DrivetrainSubsystem extends SubsystemBase {
      mBackLeft.follow(mFrontLeft);
      mBackRight.follow(mFrontRight);
     
-     
- 
      // Set the neutral modes
      mFrontLeft.setNeutralMode(NeutralMode.Brake);
      mFrontRight.setNeutralMode(NeutralMode.Brake);
@@ -299,12 +292,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     mOdometry.update(mPigeon.getRotation2d(), getWheelDistances()[0], getWheelDistances()[1]);
-
-    // Pose2d pose = PhotonUtils.estimateFieldToRobot(
-    //   Constants.Vision.kCameraHeightMeters,
-    //   Constants.Vision.kTargetHeightMeters,
-    //   Constants.Vision.kCameraPitchRadians, 0, 0, gyroAngle, fieldToTarget, cameraToRobot)
-
+    
     Pose2d pose = PhotonUtils.estimateFieldToRobot(
       PhotonUtils.estimateCameraToTarget(
         PhotonUtils.estimateCameraToTargetTranslation(
@@ -480,14 +468,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
     PIDController mVisionPID = new PIDController(1/60d, 0, 1d/3000);
 
     double startPoint;
+    MedianFilter filter = new MedianFilter(10);
 
-    VisionSupplier vision;
-
-    public VisionAimAssist(VisionSupplier vision){
-      this.vision = vision;
-
+    public VisionAimAssist(){
       mVisionPID.setTolerance(5, 10);
-
     }
 
     @Override
@@ -499,7 +483,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
     @Override
     public void execute() {
       if(vision.hasTarget()){
-        double effort = mVisionPID.calculate(vision.getYaw(), 0);
+        double effort = mVisionPID.calculate(filter.calculate(vision.getYaw()), 0);
         SmartDashboard.putNumber("effort", effort);
         mFrontLeft.setVoltage(-effort*12);
         mFrontRight.setVoltage(effort*12);
@@ -516,7 +500,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
     @Override
     public boolean isFinished() {
-        return mVisionPID.atSetpoint();
+      return mVisionPID.atSetpoint();
     }
 
   }

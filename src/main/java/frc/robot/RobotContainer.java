@@ -12,15 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.autonomous.routines.test.RoutineTesting;
 import frc.robot.custom.ArborMath;
 import frc.robot.custom.controls.CommandXboxController;
 import frc.robot.custom.controls.Deadbander;
@@ -32,6 +29,7 @@ import frc.robot.subsystems.intake.IntakePistonsSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.shooter.FlywheelSubsystem;
 import frc.robot.subsystems.shooter.HoodSubsystem;
+import frc.robot.subsystems.shooter.Interpolation.InterpolatingTable;
 
 public class RobotContainer {
 
@@ -40,8 +38,8 @@ public class RobotContainer {
   private LiftSubsystem lift = new LiftSubsystem();
   private IntakeSubsystem intake = new IntakeSubsystem();
   private IntakePistonsSubsystem pistons = new IntakePistonsSubsystem();
-  private FlywheelSubsystem flywheel = new FlywheelSubsystem();
-  private HoodSubsystem hood = new HoodSubsystem();
+  private FlywheelSubsystem flywheel = new FlywheelSubsystem(vision.visionSupplier);
+  private HoodSubsystem hood = new HoodSubsystem(vision.visionSupplier);
   private DrivetrainSubsystem drivetrain = new DrivetrainSubsystem(vision.visionSupplier);
 
   private Trigger intakeExtended = new Trigger(pistons::extended);
@@ -56,7 +54,7 @@ public class RobotContainer {
   
   public RobotContainer() {
 
-    //LiveWindow.disableAllTelemetry();
+    LiveWindow.disableAllTelemetry();
 
     configureButtonBindings();
     configureAutoChooser();
@@ -71,9 +69,7 @@ public class RobotContainer {
       )
     );
 
-    // hood.setDefaultCommand(
-    //   new RunCommand(() -> hood.set(mDriverController.getRightY()), hood)
-    // );
+    // hood.setDefaultCommand(new RunCommand(() -> hood.set(-1), hood));
 
     NetworkTableInstance.getDefault().getTable("photonvision").getEntry("version").setValue("v2022.1.6");
 
@@ -94,54 +90,51 @@ public class RobotContainer {
     );
 
     mDriverController.a().whenHeld(
-      drivetrain.new VisionAimAssist(vision.visionSupplier)
+      drivetrain.new VisionAimAssist().beforeStarting(new InstantCommand(vision.visionSupplier::enableLEDs, vision)).andThen(new InstantCommand(vision.visionSupplier::disableLEDs, vision))
     );
 
     mDriverController.b().whenHeld(
       new SequentialCommandGroup(
         new ParallelCommandGroup(
-          new InstantCommand(() -> flywheel.setTargetRPM(2000), flywheel),
-          new InstantCommand(() -> hood.setTargetAngle(30), hood)
+          new InstantCommand(flywheel::enableVision, flywheel),
+          new InstantCommand(() -> vision.visionSupplier.enableLEDs())
         ),
         new ParallelCommandGroup(
           new WaitUntilCommand(flywheel::ready),
           new WaitUntilCommand(hood::ready)
         ),
         new InstantCommand(pistons::extend, pistons),
-        new InstantCommand(accelerator::start, accelerator),
-        new WaitCommand(2)
+        new InstantCommand(accelerator::start, accelerator)
       )
     ).whenReleased(
     new ParallelCommandGroup(
-      //home hood
-      new InstantCommand(flywheel::stop, flywheel),
+      new InstantCommand(() -> {flywheel.stop(); flywheel.disableVision();} , flywheel),
       new InstantCommand(accelerator::stop, accelerator),
-      new InstantCommand(pistons::retract, pistons)
+      new InstantCommand(pistons::retract, pistons),
+      new InstantCommand(() -> vision.visionSupplier.disableLEDs())
     ));
-
-    // mDriverController.b().whenHeld(
-    //   new StartEndCommand(
-    //     () -> flywheel.setTargetRPM(4000),
-    //     flywheel::stop,
-    //     flywheel
-    //   )
-    // );
 
     mDriverController.y().whenHeld(
       new StartEndCommand(
-        () -> accelerator.set(-1),
+        accelerator::start,
         accelerator::stop,
         accelerator
       )
     );
+
+    // mDriverController.y().whenHeld(
+    //   new RunCommand(() -> hood.setTargetAngle(30),hood)
+    // ).whenReleased(
+    //   new InstantCommand(() -> hood.setTargetAngle(0), hood)
+    // );
     
   }
   
   public void configureAutoChooser(){
     mAutoChooser.setDefaultOption("Nothing", null);
-    mAutoChooser.addOption("Test", 
-      new RoutineTesting(drivetrain, intake, pistons, flywheel, hood, accelerator, vision.visionSupplier)
-    );
+    // mAutoChooser.addOption("Test", 
+    //   new RoutineTesting(drivetrain, intake, pistons, flywheel, hood, accelerator, vision.visionSupplier)
+    // );
     SmartDashboard.putData("Auto Chooser", mAutoChooser);
   }
 

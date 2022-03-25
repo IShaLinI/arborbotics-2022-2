@@ -6,11 +6,9 @@ import com.ctre.phoenix.motorcontrol.SupplyCurrentLimitConfiguration;
 import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
-
-import org.opencv.features2d.FastFeatureDetector;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -19,7 +17,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.custom.ArborMath;
+import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
+import frc.robot.subsystems.shooter.Interpolation.TestInterpolatingTable;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -31,12 +30,18 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   private final TalonFXSimCollection mMasterSim = mMaster.getSimCollection();
 
-  private PIDController mPID = new PIDController(64d/9570d, 0, 0);
+  private PIDController mPID = new PIDController(20d/9570d, 0, 0);
   private final SimpleMotorFeedforward mFeedForward = Constants.Flywheel.kFeedForward;
 
   public double mTargetRPM, mCurrentRPM, mPIDEffort, mFFEffort;
 
   public static final LinearSystem<N1, N1, N1> kPlant = LinearSystemId.identifyVelocitySystem(12d/6380d, 0.12);
+
+  LinearFilter mNoiseFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
+
+  VisionSupplier vision;
+
+  public boolean useVision = false;
 
   private FlywheelSim mSim = new FlywheelSim(
     kPlant,
@@ -44,9 +49,11 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
     1/1.5
   );
 
-  public FlywheelSubsystem() {
+  public FlywheelSubsystem(VisionSupplier vision) {
     configureMotor();
+    mPID.setTolerance(50);
     mTargetRPM = 0;
+    this.vision = vision;
   }
 
   public void configureMotor(){
@@ -67,10 +74,10 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
     mMaster.configSupplyCurrentLimit(new SupplyCurrentLimitConfiguration(true, 40, 40, 0));
 
     mSlave.configFactoryDefault();
-    mSlave.setNeutralMode(NeutralMode.Coast);
+    mSlave.setNeutralMode(NeutralMode.Coast); 
 
-    mSlave.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_1Ms);
-    mSlave.configVelocityMeasurementWindow(1);
+    mSlave.configVelocityMeasurementPeriod(SensorVelocityMeasPeriod.Period_100Ms);
+    mSlave.configVelocityMeasurementWindow(32);
 
     mSlave.setInverted(false);
 
@@ -88,6 +95,10 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
     mCurrentRPM = getRPM();
 
+    if(vision.hasTarget() && useVision){
+      setTargetRPM(TestInterpolatingTable.get(vision.getDistance()).rpm);
+    }
+
     if(mTargetRPM != 0){
       mFFEffort = mFeedForward.calculate(mTargetRPM);
       mPIDEffort = mPID.calculate(mCurrentRPM, mTargetRPM);
@@ -100,19 +111,24 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   }
 
-  @Config(tabName = "Shooter", name = "Set RPM")
+  @Config(tabName = "Shooter", name = "Set RPM")  
   public void setTargetRPM(double newTarget){
     mTargetRPM = newTarget;
   }
 
-  @Log(tabName = "Shooter", name = "RPM")
+  @Log(tabName = "Shooter", name = "Filtered RPM")
   public double getRPM(){
-    return ((mMaster.getSelectedSensorVelocity()/2048)*600*1.5);
+    return mNoiseFilter.calculate((mMaster.getSelectedSensorVelocity()/2048d)*600*1.5);
+  }
+
+  @Log(tabName = "Shooter", name ="Raw RPM")
+  private double getRawRPM(){
+    return (mMaster.getSelectedSensorVelocity()/2048d)*600*1.5;
   }
 
   @Log(tabName = "Shooter", name = "Flywheel Ready")
   public boolean ready(){
-    return ArborMath.inTolerance(Math.abs(mTargetRPM-mCurrentRPM), 100) && mTargetRPM != 0;
+    return mPID.atSetpoint() && mTargetRPM != 0;
   }
 
   public void stop(){
@@ -122,11 +138,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   @Override
   public void periodic() {
-      if(mTargetRPM != 0){
-        runFlywheel();
-      }else{
-        stop();
-      }
+    runFlywheel();
   }
 
   @Override
@@ -149,6 +161,14 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
   @Log(tabName = "Shooter", name = "RPM Target")
   private double getRPMTarget(){
     return mTargetRPM;
+  }
+
+  public void enableVision(){
+    useVision = true;
+  }
+
+  public void disableVision(){
+    useVision = false;
   }
 
 }

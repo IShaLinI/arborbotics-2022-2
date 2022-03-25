@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.security.spec.DSAGenParameterSpec;
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.SimVisionSystem;
@@ -13,7 +11,6 @@ import org.photonvision.SimVisionTarget;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -52,6 +49,7 @@ public class VisionSubsystem extends SubsystemBase {
 
   public VisionSubsystem(){
     mSim.addSimVisionTarget(mTarget);
+    mLimelight.setDriverMode(false);
   }
 
 
@@ -108,6 +106,10 @@ public class VisionSubsystem extends SubsystemBase {
 
     public void processSim(Pose2d robotPoseMeters){
       mSim.processFrame(robotPoseMeters);
+    }
+
+    public void setDriverMode(boolean enabled){
+      mLimelight.setDriverMode(enabled);
     }
 
     // Toggles the LL LEDs

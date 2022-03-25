@@ -50,15 +50,13 @@ public final class Constants {
     }
 
     public static class Flywheel {
-        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(1.21 , 12d/(6380d*1.5d));
+        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0.8, 12d/(6380d*1.5d));
         public static final double kRPMConversionFactor = (600d/2048d) * 1.5;
         public static final double kRPMTolerance = 50;
     }   
 
     public static class Hood {
-        public static final double kP = 0;
-        public static final SimpleMotorFeedforward kFeedForward = new SimpleMotorFeedforward(0, 12d/11000d); //TODO find kS
-        public static final double kAngleConversionFactor = ((((10*5*3)*(3/2d)*(5/2d))))/360d;
+        public static final double kAngleConversionFactor = ((((10*5*3)*(2/3d)*(5/2d))))/360d;
     }
 
     public static class Drivetrain {

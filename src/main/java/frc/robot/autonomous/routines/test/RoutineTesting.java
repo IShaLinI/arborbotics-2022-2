@@ -3,7 +3,6 @@ package frc.robot.autonomous.routines.test;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.autonomous.Trajectories;
-import frc.robot.autonomous.common.AimRoutine;
 import frc.robot.autonomous.common.FireRoutine;
 import frc.robot.autonomous.common.IntakePath;
 import frc.robot.subsystems.AcceleratorSubsystem;
@@ -19,7 +18,7 @@ public class RoutineTesting extends SequentialCommandGroup {
     addCommands(
       new InstantCommand(() -> drivetrain.resetOdometry(Trajectories.Test.getInitialPose()), drivetrain),
       new IntakePath(Trajectories.Test, drivetrain, intake, pistons),
-      new AimRoutine(drivetrain, vision),
+      drivetrain.new VisionAimAssist(),
       new FireRoutine(flywheel, hood, accelerator, vision, pistons)
     );
   }
