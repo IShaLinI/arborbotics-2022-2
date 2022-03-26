@@ -1,4 +1,18 @@
 {
+  "HALProvider": {
+    "Other Devices": {
+      "Talon FX[9]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon SRX[6]": {
+        "header": {
+          "open": true
+        }
+      }
+    }
+  },
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
@@ -26,8 +40,24 @@
       "/LiveWindow/Ungrouped/Talon SRX [13]": "Motor Controller",
       "/LiveWindow/Ungrouped/Talon SRX [6]": "Motor Controller",
       "/LiveWindow/VisionSubsystem": "Subsystem",
+      "/Shuffleboard/Shooter/Reset Hood Angle": "Command",
+      "/Shuffleboard/Shooter/mPID": "PIDController",
       "/SmartDashboard/Auto Chooser": "String Chooser",
       "/SmartDashboard/Field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Field": {
+        "bottom": 900,
+        "height": 8.229599952697754,
+        "image": "D:\\FRC\\Projects\\arborbotics-2022\\FieldImages\\2022-field.png",
+        "left": 74,
+        "right": 1774,
+        "top": 50,
+        "width": 16.459199905395508,
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables": {
@@ -36,6 +66,38 @@
         "open": true
       },
       "open": true
+    },
+    "SmartDashboard": {
+      "open": true
+    },
+    "photonvision": {
+      "limelight": {
+        "open": true
+      },
+      "open": true
+    }
+  },
+  "NetworkTables View": {
+    "visible": false
+  },
+  "Plot": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "height": 357,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "NT:/photonvision/limelight/targetYawEntry"
+            }
+          ]
+        }
+      ]
     }
   }
 }

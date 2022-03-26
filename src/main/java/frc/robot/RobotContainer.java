@@ -10,10 +10,12 @@ import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.RunEndCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -85,7 +87,10 @@ public class RobotContainer {
           pistons
         ),
         new StartEndCommand(
-          intake::start, intake::stop, intake)
+          intake::start,
+          intake::stop,
+          intake
+        )
       )
     );
 
@@ -94,47 +99,33 @@ public class RobotContainer {
     );
 
     mDriverController.b().whenHeld(
-      new SequentialCommandGroup(
+      new ConditionalCommand(
+        new ParallelCommandGroup( //Fire Ball
+          new StartEndCommand(accelerator::start, accelerator::stop, accelerator),
+          new StartEndCommand(pistons::extend, pistons::retract, pistons),
+          new StartEndCommand(intake::start, intake::stop, intake)
+        ), 
         new ParallelCommandGroup(
-          new InstantCommand(flywheel::enableVision, flywheel),
-          new InstantCommand(() -> vision.visionSupplier.enableLEDs())
+          drivetrain.new VisionAimAssist(),
+          new RunEndCommand(
+            () -> {flywheel.enableVision(); flywheel.setTargetRPM(InterpolatingTable.get(vision.visionSupplier.getDistance()).rpm);}, 
+            () -> {flywheel.disableVision(); flywheel.stop();}, 
+            flywheel
+          ),
+          new RunEndCommand(
+            () -> hood.setTargetAngle(InterpolatingTable.get(vision.visionSupplier.getDistance()).hoodAngle), 
+            () -> hood.setTargetAngle(0), 
+            flywheel
+          )
         ),
-        new ParallelCommandGroup(
-          new WaitUntilCommand(flywheel::ready),
-          new WaitUntilCommand(hood::ready)
-        ),
-        new InstantCommand(pistons::extend, pistons),
-        new InstantCommand(accelerator::start, accelerator)
-      )
-    ).whenReleased(
-    new ParallelCommandGroup(
-      new InstantCommand(() -> {flywheel.stop(); flywheel.disableVision();} , flywheel),
-      new InstantCommand(accelerator::stop, accelerator),
-      new InstantCommand(pistons::retract, pistons),
-      new InstantCommand(() -> vision.visionSupplier.disableLEDs())
-    ));
-
-    mDriverController.y().whenHeld(
-      new StartEndCommand(
-        accelerator::start,
-        accelerator::stop,
-        accelerator
+        () -> (hood.ready() && flywheel.ready() && Math.abs(vision.visionSupplier.getYaw()) < 2)
       )
     );
-
-    // mDriverController.y().whenHeld(
-    //   new RunCommand(() -> hood.setTargetAngle(30),hood)
-    // ).whenReleased(
-    //   new InstantCommand(() -> hood.setTargetAngle(0), hood)
-    // );
     
   }
   
   public void configureAutoChooser(){
     mAutoChooser.setDefaultOption("Nothing", null);
-    // mAutoChooser.addOption("Test", 
-    //   new RoutineTesting(drivetrain, intake, pistons, flywheel, hood, accelerator, vision.visionSupplier)
-    // );
     SmartDashboard.putData("Auto Chooser", mAutoChooser);
   }
 

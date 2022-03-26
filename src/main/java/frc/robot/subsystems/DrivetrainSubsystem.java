@@ -465,13 +465,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   public class VisionAimAssist extends CommandBase{
     
-    PIDController mVisionPID = new PIDController(1/60d, 0, 1d/3000);
+    PIDController mVisionPID = new PIDController(1/100d, 0, 1/3);
 
     double startPoint;
-    MedianFilter filter = new MedianFilter(10);
+    MedianFilter filter = new MedianFilter(2);
 
     public VisionAimAssist(){
-      mVisionPID.setTolerance(5, 10);
+      mVisionPID.setTolerance(0.5, 1);
     }
 
     @Override
@@ -483,13 +483,17 @@ public class DrivetrainSubsystem extends SubsystemBase {
     @Override
     public void execute() {
       if(vision.hasTarget()){
-        double effort = mVisionPID.calculate(filter.calculate(vision.getYaw()), 0);
-        SmartDashboard.putNumber("effort", effort);
-        mFrontLeft.setVoltage(-effort*12);
-        mFrontRight.setVoltage(effort*12);
+
+        double effort = mVisionPID.calculate(vision.getYaw(), 0);
+
+        mFrontLeft.setVoltage(-effort * 12);
+        mFrontRight.setVoltage(effort * 12);
+
       }else{
+
         mFrontLeft.setVoltage(0);
         mFrontRight.setVoltage(0);
+
       }
     }
     @Override
