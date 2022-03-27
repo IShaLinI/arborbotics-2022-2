@@ -18,8 +18,13 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.RunEndCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.autonomous.routines.test.BlueFive;
+import frc.robot.autonomous.routines.test.Fender;
+import frc.robot.autonomous.routines.test.Path2;
+import frc.robot.autonomous.routines.test.RoutineTesting;
 import frc.robot.custom.ArborMath;
 import frc.robot.custom.controls.CommandXboxController;
 import frc.robot.custom.controls.Deadbander;
@@ -94,34 +99,45 @@ public class RobotContainer {
       )
     );
 
-    mDriverController.a().whenHeld(
-      drivetrain.new VisionAimAssist().beforeStarting(new InstantCommand(vision.visionSupplier::enableLEDs, vision)).andThen(new InstantCommand(vision.visionSupplier::disableLEDs, vision))
+
+    mDriverController.leftBumper().whenHeld(
+      drivetrain.new VisionAimAssist()
+        .beforeStarting(
+          new SequentialCommandGroup(
+            new InstantCommand(() -> vision.visionSupplier.enableLEDs()),
+            new WaitCommand(0.25)
+          )
+          ).andThen(new InstantCommand(() -> vision.visionSupplier.disableLEDs()))
     );
 
-    mDriverController.b().whenHeld(
-      new ConditionalCommand(
-        new ParallelCommandGroup( //Fire Ball
-          new StartEndCommand(accelerator::start, accelerator::stop, accelerator),
-          new StartEndCommand(pistons::extend, pistons::retract, pistons),
-          new StartEndCommand(intake::start, intake::stop, intake)
-        ), 
-        new ParallelCommandGroup(
-          drivetrain.new VisionAimAssist(),
-          new RunEndCommand(
-            () -> {flywheel.enableVision(); flywheel.setTargetRPM(InterpolatingTable.get(vision.visionSupplier.getDistance()).rpm);}, 
-            () -> {flywheel.disableVision(); flywheel.stop();}, 
-            flywheel
-          ),
-          new RunEndCommand(
-            () -> hood.setTargetAngle(InterpolatingTable.get(vision.visionSupplier.getDistance()).hoodAngle), 
-            () -> hood.setTargetAngle(0), 
-            flywheel
-          )
-        ),
-        () -> (hood.ready() && flywheel.ready() && Math.abs(vision.visionSupplier.getYaw()) < 2)
-      )
+    
+    mDriverController.y().whenHeld(
+      new StartEndCommand(accelerator::start, accelerator::stop, accelerator)
+    );
+
+
+    mDriverController.x().whenHeld(
+      new ParallelCommandGroup(
+        new RunEndCommand(() -> flywheel.setTargetRPM(2500), flywheel::stop, flywheel),
+        new RunEndCommand(() -> hood.setTargetAngle(1), hood::stop, hood)
+      ).beforeStarting(
+        new SequentialCommandGroup(
+          new InstantCommand(() -> vision.visionSupplier.enableLEDs()),
+          new WaitCommand(0.25)
+        )
+        ).andThen(new InstantCommand(() -> vision.visionSupplier.disableLEDs()))
     );
     
+    mDriverController.x().whenHeld(
+      new SequentialCommandGroup(
+        new WaitUntilCommand(() -> (hood.ready() && flywheel.ready())),
+        new ParallelCommandGroup(
+          new StartEndCommand(accelerator::start, accelerator::stop, accelerator),
+          new StartEndCommand(pistons::extend, pistons::retract, pistons)
+        )
+      )
+    );
+
   }
   
   public void configureAutoChooser(){
@@ -156,7 +172,7 @@ public class RobotContainer {
 
 
   public Command getAutonomousCommand() {
-    return mAutoChooser.getSelected();
+    return new Fender(drivetrain, intake, pistons);
   }
 
   public static Field2d getField(){

@@ -17,7 +17,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.custom.ArborMath;
 import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
+import frc.robot.subsystems.shooter.Interpolation.InterpolatingTable;
 import frc.robot.subsystems.shooter.Interpolation.TestInterpolatingTable;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -51,7 +53,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   public FlywheelSubsystem(VisionSupplier vision) {
     configureMotor();
-    mPID.setTolerance(50);
+    mPID.setTolerance(100);
     mTargetRPM = 0;
     this.vision = vision;
   }
@@ -95,13 +97,13 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
     mCurrentRPM = getRPM();
 
-    if(vision.hasTarget() && useVision){
-      setTargetRPM(TestInterpolatingTable.get(vision.getDistance()).rpm);
-    }
+    // if(vision.hasTarget() && useVision){
+    //   setTargetRPM(InterpolatingTable.get(vision.getDistance()).rpm);
+    // }
 
     if(mTargetRPM != 0){
-      mFFEffort = mFeedForward.calculate(mTargetRPM);
-      mPIDEffort = mPID.calculate(mCurrentRPM, mTargetRPM);
+      mFFEffort = mFeedForward.calculate(mTargetRPM+200);
+      mPIDEffort = mPID.calculate(mCurrentRPM, mTargetRPM+200);
     }else{
       mFFEffort = 0;
       mPIDEffort = 0;
@@ -128,7 +130,7 @@ public class FlywheelSubsystem extends SubsystemBase implements Loggable {
 
   @Log(tabName = "Shooter", name = "Flywheel Ready")
   public boolean ready(){
-    return mPID.atSetpoint() && mTargetRPM != 0;
+    return ArborMath.inTolerance(Math.abs(mTargetRPM+200-mCurrentRPM), 100) && mTargetRPM != 0;
   }
 
   public void stop(){

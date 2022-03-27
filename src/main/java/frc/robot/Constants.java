@@ -69,8 +69,8 @@ public final class Constants {
     public static class Vision{
         public static final String kCameraName = "limelight";
         public static final double kCameraHeightMeters = 0.638374;// CAD Estimate
-        //public static final double kTargetHeightMeters = Units.feetToMeters(8 + 8 / 12); // Field Vision Target 
-        public static final double kTargetHeightMeters = Units.inchesToMeters(81.75); // Y4 Vision Target
+        public static final double kTargetHeightMeters = Units.feetToMeters(8 + 8 / 12); // Field Vision Target 
+        //public static final double kTargetHeightMeters = Units.inchesToMeters(81.75); // Y4 Vision Target
         public static final double kCameraPitchRadians = Units.degreesToRadians(42);
         public static final double kMaxLEDRange = 200;
         public static final double kCamDiagFOV = 67.8; // degrees

@@ -66,7 +66,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final DifferentialDriveKinematics mKinematics = new DifferentialDriveKinematics(Constants.Drivetrain.kTrackwidth);
   private final DifferentialDriveOdometry mOdometry = new DifferentialDriveOdometry(mPigeon.getRotation2d());
 
-  private PIDController mPID = new PIDController(1, 0, 0);
+  private PIDController mPID = new PIDController(0.5, 0, 0);
   private RamseteController mRamseteController = new RamseteController();
 
   public static final LinearSystem<N2,N2,N2> mDrivetrainPlant = LinearSystemId.identifyDrivetrainSystem(
@@ -292,7 +292,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     mOdometry.update(mPigeon.getRotation2d(), getWheelDistances()[0], getWheelDistances()[1]);
-    
+
     Pose2d pose = PhotonUtils.estimateFieldToRobot(
       PhotonUtils.estimateCameraToTarget(
         PhotonUtils.estimateCameraToTargetTranslation(
@@ -465,19 +465,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   public class VisionAimAssist extends CommandBase{
     
-    PIDController mVisionPID = new PIDController(1/100d, 0, 1/3);
+    PIDController mVisionPID = new PIDController(0.015, 0, 0);
 
     double startPoint;
     MedianFilter filter = new MedianFilter(2);
 
     public VisionAimAssist(){
-      mVisionPID.setTolerance(0.5, 1);
+      //mVisionPID.setTolerance(0.5, 1);
     }
 
     @Override
     public void initialize() {
-        vision.enableLEDs();
-        startPoint = mPigeon.getYaw();
+      startPoint = mPigeon.getYaw();
     }
 
     @Override
@@ -499,12 +498,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
     @Override
     public void end(boolean interrupted) {
         stop();
-        vision.disableLEDs();
     }
 
     @Override
     public boolean isFinished() {
-      return mVisionPID.atSetpoint();
+      return Math.abs(vision.getYaw()) < 1;
+      //return false;
     }
 
   }

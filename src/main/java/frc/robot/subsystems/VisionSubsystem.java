@@ -49,7 +49,6 @@ public class VisionSubsystem extends SubsystemBase {
 
   public VisionSubsystem(){
     mSim.addSimVisionTarget(mTarget);
-    mLimelight.setDriverMode(false);
   }
 
 

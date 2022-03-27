@@ -11,7 +11,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.custom.ArborMath;
 import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
+import frc.robot.subsystems.shooter.Interpolation.InterpolatingTable;
 import frc.robot.subsystems.shooter.Interpolation.TestInterpolatingTable;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
@@ -51,9 +53,9 @@ public class HoodSubsystem extends SubsystemBase implements Loggable{
     
     mCurrentAngle = getAngle();
 
-    if(vision.hasTarget()){
-      setTargetAngle(TestInterpolatingTable.get(vision.getDistance()).hoodAngle);
-    }
+    // if(vision.hasTarget()){
+    //   setTargetAngle(InterpolatingTable.get(vision.getDistance()).hoodAngle);
+    // }
 
     mPIDEffort = mPID.calculate(mCurrentAngle, mTargetAngle);
 
@@ -77,7 +79,7 @@ public class HoodSubsystem extends SubsystemBase implements Loggable{
 
   @Log(tabName = "Shooter", name = "Hood Ready")
   public boolean ready(){
-    return mPID.atSetpoint();
+    return ArborMath.inTolerance(Math.abs(mTargetAngle - mCurrentAngle), 1) && mTargetAngle != 0;
   }
 
   public void stop(){
