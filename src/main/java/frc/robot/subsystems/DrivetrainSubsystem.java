@@ -15,7 +15,6 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.BasePigeonSimCollection;
 import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.ctre.phoenix.sensors.WPI_Pigeon2;
-import org.photonvision.PhotonUtils;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.LinearPlantInversionFeedforward;
@@ -24,7 +23,6 @@ import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.filter.MedianFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -42,7 +40,6 @@ import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotGearing;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim.KitbotWheelSize;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -293,18 +290,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
   public void periodic() {
     mOdometry.update(mPigeon.getRotation2d(), getWheelDistances()[0], getWheelDistances()[1]);
 
-    Pose2d pose = PhotonUtils.estimateFieldToRobot(
-      PhotonUtils.estimateCameraToTarget(
-        PhotonUtils.estimateCameraToTargetTranslation(
-          vision.getDistance(),
-          Rotation2d.fromDegrees(vision.getYaw())
-        ),
-        Constants.Vision.kTargetPos,
-        mPigeon.getRotation2d()
-      ),
-      Constants.Vision.kTargetPos,
-      Constants.Vision.kCameraToRobot
-    );
+    // Pose2d pose = PhotonUtils.estimateFieldToRobot(
+    //   PhotonUtils.estimateCameraToTarget(
+    //     PhotonUtils.estimateCameraToTargetTranslation(
+    //       vision.getDistance(),
+    //       Rotation2d.fromDegrees(vision.getYaw())
+    //     ),
+    //     Constants.Vision.kTargetPos,
+    //     mPigeon.getRotation2d()
+    //   ),
+    //   Constants.Vision.kTargetPos,
+    //   Constants.Vision.kCameraToRobot
+    // );
 
   }
 

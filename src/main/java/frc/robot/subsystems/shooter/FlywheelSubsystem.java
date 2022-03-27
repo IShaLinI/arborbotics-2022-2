@@ -19,8 +19,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.custom.ArborMath;
 import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
-import frc.robot.subsystems.shooter.Interpolation.InterpolatingTable;
-import frc.robot.subsystems.shooter.Interpolation.TestInterpolatingTable;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;

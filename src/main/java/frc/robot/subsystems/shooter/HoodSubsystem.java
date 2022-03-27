@@ -6,15 +6,12 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.custom.ArborMath;
 import frc.robot.subsystems.VisionSubsystem.VisionSupplier;
-import frc.robot.subsystems.shooter.Interpolation.InterpolatingTable;
-import frc.robot.subsystems.shooter.Interpolation.TestInterpolatingTable;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Config;
 import io.github.oblarg.oblog.annotations.Log;
@@ -25,7 +22,6 @@ public class HoodSubsystem extends SubsystemBase implements Loggable{
 
   @Config.PIDController(tabName = "Shooter")
   private PIDController mPID = new PIDController(0.44, 0, 0);
-  private final SimpleMotorFeedforward mFeedForward = Constants.Flywheel.kFeedForward;
 
   public double mTargetAngle, mCurrentAngle, mPIDEffort, mFFEffort;
 

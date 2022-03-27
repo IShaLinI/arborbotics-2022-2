@@ -27,7 +27,6 @@ public class VisionSubsystem extends SubsystemBase {
   private double pitch;
   private double distance;
   private boolean hasTargets;
-  private Pose2d pose;
   public final VisionSupplier visionSupplier = new VisionSupplier();
   private PhotonPipelineResult result;
 
